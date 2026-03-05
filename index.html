@@ -1,0 +1,565 @@
+<!--
+    Brain Dump v1.4.3
+    Copyright (C) 2026 booola
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Dump - Retro Cognitive Organizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&family=Pixelify+Sans:wght@400;700&display=swap');
+        
+        :root {
+            --win-bg: #c0c0c0;
+            --win-border-light: #ffffff;
+            --win-border-dark: #808080;
+            --win-border-black: #000000;
+            --win-blue: #000080;
+            --win-teal: #008080;
+            --win-teal-dark: #004d4d;
+            --cmd-bg: #0c0c0c;
+            --cmd-text: #cccccc; 
+        }
+
+        body {
+            background-color: var(--win-teal);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            color: var(--win-border-black);
+            user-select: none;
+        }
+
+        .outset {
+            border: 2px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+        }
+
+        .inset {
+            border: 2px solid;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            background-color: white;
+        }
+
+        .win-button {
+            background-color: var(--win-bg);
+            border: 2px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+            padding: 2px 4px;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+
+        .win-button:active:not(:disabled) {
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            padding: 3px 3px 1px 5px;
+        }
+
+        .win-button:disabled {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .ai-status-indicator {
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+
+        .start-button {
+            background-color: var(--win-bg);
+            border: 2px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+            padding: 2px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            box-shadow: 1px 1px 0 var(--win-border-black);
+        }
+
+        .win-title-bar {
+            background: linear-gradient(90deg, var(--win-blue), #1084d0);
+            color: white;
+            padding: 3px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .writing-area {
+            font-family: 'Courier Prime', monospace;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            border: none;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            user-select: text;
+        }
+
+        .cmd-window {
+            background-color: var(--cmd-bg) !important;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark) !important;
+            color: var(--cmd-text);
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .snippet-card {
+            background: transparent;
+            border: 1px solid #222;
+            padding: 4px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--cmd-text);
+            cursor: pointer;
+            transition: background 0.1s;
+            position: relative;
+            user-select: text;
+        }
+
+        .snippet-card:hover { background: #1a1a1a; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .win-menu {
+            position: absolute;
+            z-index: 100;
+            background-color: var(--win-bg);
+            min-width: 150px;
+            box-shadow: 2px 2px 0 var(--win-border-black);
+            color: black;
+            border: 2px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+        }
+
+        .win-menu-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: left;
+            width: 100%;
+            display: block;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .win-menu-item:hover { background-color: var(--win-blue); color: white; }
+        .win-dialog { background-color: var(--win-bg); box-shadow: 2px 2px 0 var(--win-border-black); }
+        .pixel-font { font-family: 'Pixelify Sans', sans-serif; letter-spacing: 0.5px; }
+        .header-btn { font-family: 'Pixelify Sans', sans-serif; text-transform: uppercase; font-size: 12px; }
+
+        /* Animation Keyframes */
+        @keyframes throwOut {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            30% { transform: translate(12px, -35px) rotate(45deg) scale(1.3); opacity: 1; }
+            100% { transform: translate(60px, -10px) rotate(180deg) scale(0.5); opacity: 0; }
+        }
+
+        @keyframes throwIn {
+            0% { transform: translate(-60px, -45px) rotate(-180deg) scale(0.5); opacity: 0; }
+            70% { transform: translate(-8px, -18px) rotate(-45deg) scale(1.3); opacity: 1; }
+            100% { transform: translate(0, 0) scale(1); opacity: 1; }
+        }
+
+        .animate-throw-out { animation: throwOut 0.8s forwards; }
+        .animate-throw-in { animation: throwIn 0.8s forwards; }
+
+        .copyright-credit {
+            color: var(--win-teal-dark);
+            padding: 6px 0;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-2 overflow-hidden" onclick="closeAllMenus()">
+
+    <!-- Header / Taskbar -->
+    <header class="bg-[#c0c0c0] outset px-2 py-1 flex justify-between items-center mb-2 shrink-0 h-10 pixel-font">
+        <div class="flex items-center space-x-4 h-full">
+            <div class="start-button cursor-default h-full">
+                <div id="logo-container" class="relative w-[18px] h-[18px]">
+                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+                        <rect x="3" y="6" width="10" height="9" fill="#808080"/>
+                        <rect x="2" y="5" width="12" height="2" fill="#808080"/>
+                        <rect x="4" y="8" width="1" height="5" fill="#404040"/>
+                        <rect x="7" y="8" width="1" height="5" fill="#404040"/>
+                        <rect x="11" y="8" width="1" height="5" fill="#404040"/>
+                        <g id="logo-brain">
+                            <rect x="5" y="2" width="6" height="4" fill="#ff99cc"/>
+                            <rect x="6" y="1" width="4" height="1" fill="#ff99cc"/>
+                            <rect x="7" y="3" width="2" height="2" fill="#ff66aa"/>
+                        </g>
+                    </svg>
+                </div>
+                <span class="text-sm font-bold leading-none mt-0.5" style="text-transform: uppercase;">Brain Dump</span>
+            </div>
+            
+            <nav class="flex space-x-4 ml-4">
+                <button onclick="triggerImport()" class="header-btn hover:underline">Import</button>
+                <button onclick="exportData()" class="header-btn hover:underline">Ark-Hive It!</button>
+                <button onclick="clearAll()" class="header-btn hover:underline">Reset</button>
+                <button onclick="openSettings()" class="header-btn hover:underline">Options</button>
+            </nav>
+        </div>
+        
+        <div class="flex items-center space-x-4 h-full font-bold">
+            <div class="relative flex items-center bg-white inset px-2 h-7">
+                <span class="text-[10px] mr-2 text-slate-500 font-bold uppercase header-btn">Search:</span>
+                <input type="text" id="global-search" oninput="handleSearch()" class="outline-none text-sm w-32 md:w-48 bg-transparent font-bold header-btn" style="text-transform: none;">
+            </div>
+            <div class="inset px-2 h-7 flex items-center bg-[#c0c0c0]">
+                <span id="save-status" class="uppercase font-bold text-teal-900 tracking-tighter header-btn" style="font-size: 10px;">Hive Active</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex flex-1 gap-2 overflow-hidden">
+        <!-- Main Scratchpad -->
+        <section class="flex-1 flex flex-col outset bg-[#c0c0c0]">
+            <div class="win-title-bar">
+                <div class="flex items-center">
+                    <span class="mr-2">📝</span> BrainDump.txt
+                </div>
+                <div class="flex space-x-1">
+                    <button class="win-button h-5 px-1.5" onclick="undoNotepad()" id="undo-btn" title="Global Undo">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="4"><path d="M9 14L4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                    </button>
+                    <button id="ai-sort-btn" class="win-button h-5 px-1.5" onclick="autoSort()" title="NeuroSort AI">
+                        <svg id="robot-icon" width="12" height="12" viewBox="0 0 16 16" fill="black" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+                            <rect x="7" y="0" width="2" height="1"/><rect x="5" y="1" width="6" height="6"/>
+                            <rect x="6" y="3" width="1" height="1" fill="white"/><rect x="9" y="3" width="1" height="1" fill="white"/>
+                            <rect x="6" y="7" width="4" height="1"/><rect x="4" y="8" width="8" height="6"/>
+                            <rect x="3" y="10" width="1" height="2"/><rect x="12" y="10" width="1" height="2"/>
+                            <rect x="5" y="14" width="2" height="1"/><rect x="9" y="14" width="2" height="1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 p-1">
+                <div class="inset h-full relative">
+                    <textarea id="notepad" class="writing-area p-4 no-scrollbar" placeholder="Dump your thoughts here... Select text and click a gate to file it. Use the Robot for Auto-Sort."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sidebar Gates -->
+        <aside class="w-80 md:w-96 flex flex-col outset bg-[#c0c0c0]">
+            <div class="win-title-bar">
+                <span>📂 Logic Gates</span>
+                <button onclick="addNewTopic()" class="win-button h-4 w-4 font-bold text-xs p-0">+</button>
+            </div>
+            <div id="bins-container" class="p-2 overflow-y-auto no-scrollbar flex-1"></div>
+        </aside>
+    </main>
+
+    <!-- Footer Simple Credit -->
+    <div class="copyright-credit pixel-font">
+        vibe coding by booola using Gemini © March 4, 2026
+    </div>
+
+    <!-- Modals -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/20 flex items-center justify-center p-4 z-50">
+        <div class="win-dialog outset max-w-sm w-full">
+            <div class="win-title-bar"><span>AI Configuration</span><button onclick="closeSettings()">X</button></div>
+            <div class="p-6 space-y-4">
+                <p class="text-[10px] uppercase font-bold text-slate-600 mb-2">System Parameters</p>
+                <div>
+                    <label class="block text-xs mb-1 font-bold">API KEY:</label>
+                    <div class="inset p-1"><input type="password" id="api-key-input" class="w-full text-xs outline-none" placeholder="Enter Gemini API Key..."></div>
+                </div>
+                <div>
+                    <label class="block text-xs mb-1 font-bold">MODEL VERSION:</label>
+                    <div class="inset p-1">
+                        <select id="model-select" class="w-full text-xs outline-none bg-white">
+                            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+                            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-2"><button onclick="saveSettings()" class="win-button w-full font-bold">SAVE SETTINGS</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-bin-modal" class="hidden fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+        <div class="win-dialog outset max-w-sm w-full">
+            <div class="win-title-bar"><span>System Message</span><button onclick="closeDeleteModal()">X</button></div>
+            <div class="p-6"><p class="text-sm mb-4 font-bold" id="delete-modal-text"></p><div class="flex justify-end space-x-2"><button id="confirm-delete-btn" class="win-button font-bold px-6">OK</button><button onclick="closeDeleteModal()" class="win-button px-6">Cancel</button></div></div>
+        </div>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 flex items-center justify-center z-50">
+        <div class="win-dialog outset max-w-lg w-full">
+            <div class="win-title-bar"><span id="modal-title">Edit Gate</span><button onclick="closeModal()">X</button></div>
+            <div class="p-4"><div class="inset p-2 h-64"><textarea id="modal-content-area" class="w-full h-full p-2 text-xs font-mono outline-none border-none resize-none no-scrollbar"></textarea></div><div class="flex justify-end mt-4"><button onclick="saveSnippetChanges()" class="win-button font-bold px-6">SAVE CHANGES</button></div></div>
+        </div>
+    </div>
+
+    <input type="file" id="import-input" class="hidden" accept=".txt" onchange="handleImport(event)">
+
+    <script>
+        const notepad = document.getElementById('notepad');
+        const binsContainer = document.getElementById('bins-container');
+        const searchInput = document.getElementById('global-search');
+        const logoBrain = document.getElementById('logo-brain');
+
+        let appState = {
+            notepadContent: "",
+            history: [],
+            settings: { userApiKey: "", model: "gemini-2.5-flash" },
+            topics: [
+                { id: 't1', name: 'Ideas', snippets: [], history: [] },
+                { id: 't2', name: 'Tasks', snippets: [], history: [] }
+            ]
+        };
+
+        let currentEditingSnippet = { ti: null, si: null };
+        let activeMenuIndex = null;
+        let isProcessing = false;
+
+        function init() {
+            const saved = localStorage.getItem('brainDumpState_v2');
+            if (saved) { 
+                appState = JSON.parse(saved); 
+                appState.topics.forEach(t => { if (!t.history) t.history = []; });
+                if (!appState.settings) appState.settings = { userApiKey: "", model: "gemini-2.5-flash" };
+            }
+            notepad.value = appState.notepadContent;
+            renderBins();
+            updateUndoState();
+            updateAiUIStates();
+        }
+
+        function updateAiUIStates() {
+            const hasKey = !!appState.settings.userApiKey;
+            const robotIcon = document.getElementById('robot-icon');
+            if (robotIcon) robotIcon.parentElement.classList.toggle('ai-status-indicator', !hasKey);
+            renderBins();
+        }
+
+        function animateBrain(type) {
+            logoBrain.classList.remove('animate-throw-out', 'animate-throw-in');
+            void logoBrain.offsetWidth; 
+            logoBrain.classList.add(type === 'export' ? 'animate-throw-out' : 'animate-throw-in');
+        }
+
+        function save(pushHistory = true) {
+            if (pushHistory && appState.notepadContent !== notepad.value) {
+                appState.history.push(appState.notepadContent);
+                if (appState.history.length > 50) appState.history.shift();
+            }
+            appState.notepadContent = notepad.value;
+            localStorage.setItem('brainDumpState_v2', JSON.stringify(appState));
+            updateUndoState();
+        }
+
+        function pushBinHistory(index) {
+            const t = appState.topics[index];
+            if (!t.history) t.history = [];
+            t.history.push([...t.snippets]);
+            if (t.history.length > 20) t.history.shift();
+        }
+
+        function undoBinAction(index, e) {
+            e.stopPropagation();
+            const t = appState.topics[index];
+            if (t.history?.length > 0) { 
+                t.snippets = t.history.pop(); 
+                save(false); 
+                renderBins(); 
+            }
+        }
+
+        function updateUndoState() {
+            const btn = document.getElementById('undo-btn');
+            if (btn) btn.style.opacity = appState.history.length === 0 ? "0.5" : "1";
+        }
+
+        notepad.addEventListener('input', () => save(false));
+
+        async function fetchGemini(prompt, sys = "") {
+            const key = appState.settings.userApiKey;
+            if (!key) { openSettings(); return null; }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${appState.settings.model}:generateContent?key=${key}`;
+            try {
+                const res = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: sys ? { parts: [{ text: sys }] } : undefined }) 
+                });
+                const data = await res.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            } catch (e) { return null; }
+        }
+
+        async function autoSort() {
+            if (!appState.settings.userApiKey) { openSettings(); return; }
+            if (isProcessing || !notepad.value.trim()) return;
+            isProcessing = true; renderBins();
+            const topicsList = appState.topics.map(t => t.name).join(", ");
+            const result = await fetchGemini(`Categories: [${topicsList}]\nLines:\n${notepad.value}`, "Return valid JSON array: [{\"line\": \"...\", \"category\": \"...\", \"isNew\": true/false}]");
+            if (result) {
+                try {
+                    let cleaned = result.replace(/```json|```/g, "").trim();
+                    const sorted = JSON.parse(cleaned);
+                    sorted.forEach(item => {
+                        let idx = appState.topics.findIndex(t => t.name.toLowerCase() === item.category.toLowerCase());
+                        if (idx === -1) {
+                            appState.topics.push({ id: Date.now() + Math.random(), name: item.category, snippets: [], history: [] });
+                            idx = appState.topics.length - 1;
+                        }
+                        pushBinHistory(idx);
+                        appState.topics[idx].snippets.push(item.line);
+                    });
+                    notepad.value = ""; save(false);
+                } catch(e) { console.error("Parse error"); }
+            }
+            isProcessing = false; renderBins();
+        }
+
+        function renderBins() {
+            const q = searchInput.value.toLowerCase();
+            binsContainer.innerHTML = '';
+            appState.topics.forEach((topic, index) => {
+                const filtered = topic.snippets.filter(s => s.toLowerCase().includes(q));
+                const bin = document.createElement('div');
+                bin.className = `topic-bin outset p-1 mb-3 cursor-pointer relative ${isProcessing ? 'opacity-50' : ''}`;
+                bin.onclick = (e) => { if (!e.target.closest('.snippet-card') && !e.target.closest('.win-button')) fileText(index); };
+                bin.innerHTML = `
+                    <div class="flex justify-between items-center px-1 mb-1">
+                        <span class="text-[11px] font-bold truncate">${topic.name} [${topic.snippets.length}]</span>
+                        <div class="flex space-x-1 shrink-0">
+                             <button onclick="undoBinAction(${index}, event)" class="win-button h-4 w-4 p-0" ${topic.history?.length ? '' : 'disabled'}>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="4"><path d="M9 14L4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                             </button>
+                             <div class="relative">
+                                <button onclick="toggleMenu(${index}, event)" class="win-button h-4 w-4 p-0 text-[7px]">▼</button>
+                                ${activeMenuIndex === index ? `
+                                <div class="win-menu outset top-5 right-0">
+                                    <button class="win-menu-item" onclick="exportBin(${index})">Export Bin .TXT</button>
+                                </div>` : ''}
+                             </div>
+                             <button onclick="event.stopPropagation(); renameTopic(${index})" class="win-button h-4 w-4 p-0"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
+                             <button onclick="event.stopPropagation(); promptDeleteTopic(${index})" class="win-button h-4 w-4 p-0 text-red-600 font-bold">X</button>
+                        </div>
+                    </div>
+                    <div class="cmd-window p-1 max-h-48 overflow-y-auto no-scrollbar inset">
+                        ${filtered.slice().reverse().map(s => `
+                            <div class="snippet-card group" onclick="event.stopPropagation(); openEditModal(${index}, ${topic.snippets.indexOf(s)})">
+                                <span>> ${s}</span>
+                                <button class="absolute top-0 right-0 bg-red-900 text-red-100 text-[8px] px-1 font-bold outset hidden group-hover:block" onclick="deleteSnippet(${index}, ${topic.snippets.indexOf(s)}, event)">X</button>
+                            </div>`).join('')}
+                    </div>`;
+                binsContainer.appendChild(bin);
+            });
+        }
+
+        function fileText(idx) {
+            const t = notepad.value.substring(notepad.selectionStart, notepad.selectionEnd).trim();
+            if (t) { 
+                pushBinHistory(idx); appState.topics[idx].snippets.push(t); 
+                notepad.value = notepad.value.substring(0, notepad.selectionStart) + notepad.value.substring(notepad.selectionEnd); 
+                save(false); renderBins(); 
+            }
+        }
+
+        function triggerImport() { document.getElementById('import-input').click(); }
+        function handleImport(e) {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                const lines = ev.target.result.split('\n');
+                let curSec = null, scratchText = "";
+                const newTops = [];
+                lines.forEach(l => {
+                    const h = l.match(/^--- (.*) ---$/);
+                    if (h) {
+                        curSec = h[1].trim();
+                        if (curSec !== "UNPROCESSED SCRATCHPAD") newTops.push({ name: curSec, snippets: [], history: [] });
+                    } else if (curSec === "UNPROCESSED SCRATCHPAD") {
+                        if (l.trim() && !l.startsWith("===")) scratchText += l + "\n";
+                    } else if (curSec && l.startsWith("- ")) {
+                        newTops[newTops.length - 1].snippets.push(l.substring(2).trim());
+                    }
+                });
+                if (confirm("Restore this data? Current progress will be replaced.")) {
+                    appState.notepadContent = scratchText.trim();
+                    appState.topics = newTops.map(t => ({ ...t, id: Date.now() + Math.random() }));
+                    notepad.value = appState.notepadContent;
+                    save(false); renderBins(); animateBrain('import');
+                }
+            };
+            reader.readAsText(f);
+        }
+
+        function exportData() {
+            animateBrain('export');
+            const c = "=== BRAIN DUMP ===\n\n--- UNPROCESSED SCRATCHPAD ---\n" + notepad.value + "\n\n" + appState.topics.map(t => `--- ${t.name.toUpperCase()} ---\n${t.snippets.map(s => "- " + s).join('\n')}`).join('\n\n');
+            const b = new Blob([c], { type: 'text/plain' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `braindump_${new Date().toISOString().slice(0,10)}.txt`; a.click();
+        }
+
+        function exportBin(index) {
+            const t = appState.topics[index];
+            let c = `--- ${t.name.toUpperCase()} ---\n` + t.snippets.map(s => "- " + s).join("\n");
+            const b = new Blob([c], { type: 'text/plain' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${t.name.replace(/\s+/g, '_')}.txt`; a.click();
+        }
+
+        function toggleMenu(i, e) { e.stopPropagation(); activeMenuIndex = (activeMenuIndex === i) ? null : i; renderBins(); }
+        function closeAllMenus() { if (activeMenuIndex !== null) { activeMenuIndex = null; renderBins(); } }
+        
+        function openSettings() { 
+            document.getElementById('api-key-input').value = appState.settings.userApiKey; 
+            document.getElementById('model-select').value = appState.settings.model || "gemini-2.5-flash"; 
+            document.getElementById('settings-modal').classList.remove('hidden'); 
+        }
+        function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+        function saveSettings() { 
+            appState.settings.userApiKey = document.getElementById('api-key-input').value.trim(); 
+            appState.settings.model = document.getElementById('model-select').value; 
+            save(false); closeSettings(); updateAiUIStates();
+        }
+        
+        function openEditModal(ti, si) { currentEditingSnippet = { ti, si }; document.getElementById('modal-content-area').value = appState.topics[ti].snippets[si]; document.getElementById('modal').classList.remove('hidden'); }
+        function saveSnippetChanges() { const { ti, si } = currentEditingSnippet; pushBinHistory(ti); appState.topics[ti].snippets[si] = document.getElementById('modal-content-area').value; save(false); renderBins(); closeModal(); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function promptDeleteTopic(i) { pendingDeleteIndex = i; document.getElementById('delete-modal-text').innerText = `Delete bin "${appState.topics[i].name}"? Content returns to scratchpad.`; document.getElementById('delete-bin-modal').classList.remove('hidden'); }
+        function closeDeleteModal() { document.getElementById('delete-bin-modal').classList.add('hidden'); }
+        document.getElementById('confirm-delete-btn').onclick = () => {
+            const t = appState.topics[pendingDeleteIndex];
+            notepad.value = t.snippets.join("\n\n") + (notepad.value.trim() ? "\n\n" + notepad.value : "");
+            appState.topics.splice(pendingDeleteIndex, 1); save(false); renderBins(); closeDeleteModal();
+        };
+        function addNewTopic() { const n = prompt("Gate Name:"); if (n?.trim()) { appState.topics.push({ id: Date.now() + Math.random(), name: n.trim(), snippets: [], history: [] }); save(false); renderBins(); } }
+        function renameTopic(i) { const n = prompt("Rename:", appState.topics[i].name); if (n?.trim()) { appState.topics[i].name = n.trim(); save(false); renderBins(); } }
+        function handleSearch() { renderBins(); }
+        function undoNotepad() { if (appState.history.length) { notepad.value = appState.history.pop(); save(false); renderBins(); } }
+        function deleteSnippet(ti, si, e) { e.stopPropagation(); pushBinHistory(ti); const text = appState.topics[ti].snippets[si]; notepad.value = text + "\n" + notepad.value; appState.topics[ti].snippets.splice(si, 1); save(false); renderBins(); }
+
+        init();
+    </script>
+</body>
+</html>
