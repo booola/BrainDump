@@ -189,6 +189,11 @@
             text-transform: uppercase;
             width: 100%;
         }
+
+        .progress-track { height: 12px; background: #fff; border: 2px solid; border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark); overflow: hidden; }
+        .progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--win-blue), #1084d0); transition: width 0.12s linear; }
+        .progress-spinner { width: 12px; height: 12px; border: 2px solid #9ca3af; border-top-color: var(--win-blue); border-radius: 999px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="h-screen flex flex-col p-2 overflow-hidden" onclick="closeAllMenus()">
@@ -305,7 +310,22 @@
     <div id="delete-bin-modal" class="hidden fixed inset-0 bg-black/20 flex items-center justify-center z-50">
         <div class="win-dialog outset max-w-sm w-full">
             <div class="win-title-bar"><span>System Message</span><button onclick="closeDeleteModal()">X</button></div>
-            <div class="p-6"><p class="text-sm mb-4 font-bold" id="delete-modal-text"></p><div class="flex justify-end space-x-2"><button id="confirm-delete-btn" class="win-button font-bold px-6">OK</button><button onclick="closeDeleteModal()" class="win-button px-6">Cancel</button></div></div>
+            <div class="p-6">
+                <p class="text-sm mb-4 font-bold" id="delete-modal-text"></p>
+                <div id="delete-progress-panel" class="hidden mb-4">
+                    <div class="flex items-center gap-2 mb-2 text-[11px] font-bold">
+                        <div class="progress-spinner"></div>
+                        <span id="delete-progress-text">Preparing...</span>
+                    </div>
+                    <div class="progress-track">
+                        <div id="delete-progress-bar" class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button id="confirm-delete-btn" class="win-button font-bold px-6">OK</button>
+                    <button id="cancel-delete-btn" onclick="closeDeleteModal()" class="win-button px-6">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -337,6 +357,7 @@
         let currentEditingSnippet = { ti: null, si: null };
         let activeMenuIndex = null;
         let isProcessing = false;
+        let pendingDeleteIndex = null;
 
         function init() {
             const saved = localStorage.getItem('brainDumpState_v2');
@@ -547,11 +568,46 @@
         function saveSnippetChanges() { const { ti, si } = currentEditingSnippet; pushBinHistory(ti); appState.topics[ti].snippets[si] = document.getElementById('modal-content-area').value; save(false); renderBins(); closeModal(); }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
         function promptDeleteTopic(i) { pendingDeleteIndex = i; document.getElementById('delete-modal-text').innerText = `Delete bin "${appState.topics[i].name}"? Content returns to scratchpad.`; document.getElementById('delete-bin-modal').classList.remove('hidden'); }
-        function closeDeleteModal() { document.getElementById('delete-bin-modal').classList.add('hidden'); }
-        document.getElementById('confirm-delete-btn').onclick = () => {
+        function updateDeleteProgress(percent, label) {
+            const progressBar = document.getElementById('delete-progress-bar');
+            const progressText = document.getElementById('delete-progress-text');
+            if (progressBar) progressBar.style.width = `${percent}%`;
+            if (progressText) progressText.textContent = label;
+        }
+        function closeDeleteModal() {
+            document.getElementById('delete-bin-modal').classList.add('hidden');
+            document.getElementById('delete-progress-panel').classList.add('hidden');
+            document.getElementById('confirm-delete-btn').disabled = false;
+            document.getElementById('cancel-delete-btn').disabled = false;
+            updateDeleteProgress(0, 'Preparing...');
+        }
+        document.getElementById('confirm-delete-btn').onclick = async () => {
+            if (pendingDeleteIndex === null || !appState.topics[pendingDeleteIndex]) return;
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            const cancelBtn = document.getElementById('cancel-delete-btn');
+            const progressPanel = document.getElementById('delete-progress-panel');
+            confirmBtn.disabled = true;
+            cancelBtn.disabled = true;
+            progressPanel.classList.remove('hidden');
+
+            updateDeleteProgress(20, 'Gathering snippets...');
+            await new Promise(resolve => setTimeout(resolve, 20));
+
             const t = appState.topics[pendingDeleteIndex];
-            notepad.value = t.snippets.join("\n\n") + (notepad.value.trim() ? "\n\n" + notepad.value : "");
-            appState.topics.splice(pendingDeleteIndex, 1); save(false); renderBins(); closeDeleteModal();
+            const mergedSnippets = t.snippets.join("\n\n");
+            updateDeleteProgress(55, 'Moving text back to scratchpad...');
+            await new Promise(resolve => setTimeout(resolve, 20));
+
+            notepad.value = mergedSnippets + (notepad.value.trim() ? "\n\n" + notepad.value : "");
+            appState.topics.splice(pendingDeleteIndex, 1);
+
+            updateDeleteProgress(80, 'Saving changes...');
+            await new Promise(resolve => setTimeout(resolve, 20));
+            save(false);
+
+            updateDeleteProgress(100, 'Done');
+            renderBins();
+            setTimeout(() => closeDeleteModal(), 120);
         };
         function addNewTopic() { const n = prompt("Gate Name:"); if (n?.trim()) { appState.topics.push({ id: Date.now() + Math.random(), name: n.trim(), snippets: [], history: [] }); save(false); renderBins(); } }
         function renameTopic(i) { const n = prompt("Rename:", appState.topics[i].name); if (n?.trim()) { appState.topics[i].name = n.trim(); save(false); renderBins(); } }
