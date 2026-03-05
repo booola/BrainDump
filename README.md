@@ -26,6 +26,15 @@ Note: You only need to do this if you want to use the AI features.
 4. **Sort with AI:** If you have a huge mess, click the **Robot Icon** to let the AI categorize your notes into bins automatically.
 5. **Ark-Hive It!:** When you're done with your session, hit the export button in the taskbar to save your entire workspace to a local file.
 
+## ⚠️ **Data & Privacy Disclaimer**
+**Where is your data?** This app is a local-first tool. Your notes are **not** saved on a server or in the cloud. They are stored directly in your browser's **Local Storage**. This means your data stays on your laptop and never leaves your device.
+
+**Important Notes on Data Safety:**
+* **Browser Specific:** If you type notes in Chrome, they won't show up in Firefox or Safari. Each browser has its own "filing cabinet."
+* **Risk of Loss:** If you **clear your browser's cache, history, or site data**, or if your browser/laptop crashes, your data may be permanently lost.
+* **No Liability:** As this is a personal project provided for free, **booola** (the creator) holds no responsibility or liability for any data loss, corruption, or hardware issues resulting from the use of this tool.
+* **Recommendation:** If you feel unsafe or are working on something important, **please use the "Ark-Hive It!" button frequently.** This creates a physical `.txt` file on your hard drive, which is the only way to ensure your data is permanently backed up.
+
 ## 🕹️ **Why you might like it**
 Most tools ask you to pick a folder, a tag, or a title *before* you even type your first word. This tool reverses that.
 
