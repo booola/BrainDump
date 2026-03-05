@@ -16,7 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&family=Pixelify+Sans:wght@400;700&display=swap');
-
+        
         :root {
             --win-bg: #c0c0c0;
             --win-border-light: #ffffff;
@@ -26,7 +26,7 @@
             --win-teal: #008080;
             --win-teal-dark: #004d4d;
             --cmd-bg: #0c0c0c;
-            --cmd-text: #cccccc;
+            --cmd-text: #cccccc; 
         }
 
         body {
@@ -189,35 +189,6 @@
             text-transform: uppercase;
             width: 100%;
         }
-
-        .progress-track {
-            height: 14px;
-            background: #fff;
-            border: 2px solid;
-            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #1084d0, #3aa0e4);
-            transition: width 0.12s linear;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #8eb8d8;
-            border-top-color: #004d7a;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
     </style>
 </head>
 <body class="h-screen flex flex-col p-2 overflow-hidden" onclick="closeAllMenus()">
@@ -242,7 +213,7 @@
                 </div>
                 <span class="text-sm font-bold leading-none mt-0.5" style="text-transform: uppercase;">Brain Dump</span>
             </div>
-
+            
             <nav class="flex space-x-4 ml-4">
                 <button onclick="triggerImport()" class="header-btn hover:underline">Import</button>
                 <button onclick="exportData()" class="header-btn hover:underline">Ark-Hive It!</button>
@@ -250,7 +221,7 @@
                 <button onclick="openSettings()" class="header-btn hover:underline">Options</button>
             </nav>
         </div>
-
+        
         <div class="flex items-center space-x-4 h-full font-bold">
             <div class="relative flex items-center bg-white inset px-2 h-7">
                 <span class="text-[10px] mr-2 text-slate-500 font-bold uppercase header-btn">Search:</span>
@@ -338,23 +309,6 @@
         </div>
     </div>
 
-
-    <div id="delete-progress-modal" class="hidden fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-        <div class="win-dialog outset max-w-sm w-full">
-            <div class="win-title-bar"><span>Deleting Bin...</span></div>
-            <div class="p-5 space-y-3">
-                <div class="flex items-center gap-3">
-                    <div class="loading-spinner" aria-hidden="true"></div>
-                    <p id="delete-progress-text" class="text-xs font-bold">Preparing data transfer...</p>
-                </div>
-                <div class="progress-track">
-                    <div id="delete-progress-fill" class="progress-fill"></div>
-                </div>
-                <p id="delete-progress-percent" class="text-[11px] font-bold text-right">0%</p>
-            </div>
-        </div>
-    </div>
-
     <div id="modal" class="hidden fixed inset-0 flex items-center justify-center z-50">
         <div class="win-dialog outset max-w-lg w-full">
             <div class="win-title-bar"><span id="modal-title">Edit Gate</span><button onclick="closeModal()">X</button></div>
@@ -383,13 +337,11 @@
         let currentEditingSnippet = { ti: null, si: null };
         let activeMenuIndex = null;
         let isProcessing = false;
-        let isDeletingBin = false;
-        let pendingDeleteIndex = null;
 
         function init() {
             const saved = localStorage.getItem('brainDumpState_v2');
-            if (saved) {
-                appState = JSON.parse(saved);
+            if (saved) { 
+                appState = JSON.parse(saved); 
                 appState.topics.forEach(t => { if (!t.history) t.history = []; });
                 if (!appState.settings) appState.settings = { userApiKey: "", model: "gemini-2.5-flash" };
             }
@@ -408,7 +360,7 @@
 
         function animateBrain(type) {
             logoBrain.classList.remove('animate-throw-out', 'animate-throw-in');
-            void logoBrain.offsetWidth;
+            void logoBrain.offsetWidth; 
             logoBrain.classList.add(type === 'export' ? 'animate-throw-out' : 'animate-throw-in');
         }
 
@@ -446,12 +398,12 @@
         function undoBinAction(index, e) {
             e.stopPropagation();
             const t = appState.topics[index];
-            if (t.history?.length > 0) {
+            if (t.history?.length > 0) { 
                 const previousState = normalizeBinHistoryEntry(t.history.pop());
                 t.snippets = previousState.snippets;
                 notepad.value = previousState.notepadContent;
-                save(false);
-                renderBins();
+                save(false); 
+                renderBins(); 
             }
         }
 
@@ -467,10 +419,10 @@
             if (!key) { openSettings(); return null; }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${appState.settings.model}:generateContent?key=${key}`;
             try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: sys ? { parts: [{ text: sys }] } : undefined })
+                const res = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: sys ? { parts: [{ text: sys }] } : undefined }) 
                 });
                 const data = await res.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -506,15 +458,10 @@
             const q = searchInput.value.toLowerCase();
             binsContainer.innerHTML = '';
             appState.topics.forEach((topic, index) => {
-                const filtered = topic.snippets
-                    .map((snippet, snippetIndex) => ({ snippet, snippetIndex }))
-                    .filter(({ snippet }) => snippet.toLowerCase().includes(q));
+                const filtered = topic.snippets.filter(s => s.toLowerCase().includes(q));
                 const bin = document.createElement('div');
                 bin.className = `topic-bin outset p-1 mb-3 cursor-pointer relative ${isProcessing ? 'opacity-50' : ''}`;
-                bin.onclick = (e) => {
-                    if (isDeletingBin) return;
-                    if (!e.target.closest('.snippet-card') && !e.target.closest('.win-button')) fileText(index);
-                };
+                bin.onclick = (e) => { if (!e.target.closest('.snippet-card') && !e.target.closest('.win-button')) fileText(index); };
                 bin.innerHTML = `
                     <div class="flex justify-between items-center px-1 mb-1">
                         <span class="text-[11px] font-bold truncate">${topic.name} [${topic.snippets.length}]</span>
@@ -535,66 +482,21 @@
                     </div>
                     <div class="cmd-window p-1 max-h-48 overflow-y-auto no-scrollbar inset">
                         ${filtered.slice().reverse().map(s => `
-                            <div class="snippet-card group" onclick="event.stopPropagation(); openEditModal(${index}, ${s.snippetIndex})">
-                                <span>> ${s.snippet}</span>
-                                <button class="absolute top-0 right-0 bg-red-900 text-red-100 text-[8px] px-1 font-bold outset hidden group-hover:block" onclick="deleteSnippet(${index}, ${s.snippetIndex}, event)">X</button>
+                            <div class="snippet-card group" onclick="event.stopPropagation(); openEditModal(${index}, ${topic.snippets.indexOf(s)})">
+                                <span>> ${s}</span>
+                                <button class="absolute top-0 right-0 bg-red-900 text-red-100 text-[8px] px-1 font-bold outset hidden group-hover:block" onclick="deleteSnippet(${index}, ${topic.snippets.indexOf(s)}, event)">X</button>
                             </div>`).join('')}
                     </div>`;
                 binsContainer.appendChild(bin);
             });
         }
 
-        function setDeleteProgressUI(percent, text) {
-            const safePercent = Math.max(0, Math.min(100, percent));
-            document.getElementById('delete-progress-fill').style.width = `${safePercent}%`;
-            document.getElementById('delete-progress-percent').textContent = `${Math.round(safePercent)}%`;
-            document.getElementById('delete-progress-text').textContent = text;
-        }
-
-        async function deleteTopicWithProgress(index) {
-            const t = appState.topics[index];
-            if (!t) return;
-
-            isDeletingBin = true;
-            isProcessing = true;
-            renderBins();
-            closeDeleteModal();
-            document.getElementById('delete-progress-modal').classList.remove('hidden');
-            setDeleteProgressUI(0, 'Preparing data transfer...');
-            await new Promise(resolve => requestAnimationFrame(resolve));
-
-            const chunkSize = 50;
-            const total = t.snippets.length;
-            const moved = [];
-
-            for (let i = 0; i < total; i += chunkSize) {
-                const chunk = t.snippets.slice(i, i + chunkSize);
-                moved.push(...chunk);
-                const processed = Math.min(total, i + chunk.length);
-                const percent = total ? (processed / total) * 100 : 100;
-                setDeleteProgressUI(percent, `Moving notes back to scratchpad (${processed}/${total})...`);
-                await new Promise(resolve => requestAnimationFrame(resolve));
-            }
-
-            const restoredText = moved.join("\n\n");
-            notepad.value = restoredText + (notepad.value.trim() ? "\n\n" + notepad.value : "");
-            appState.topics.splice(index, 1);
-            save(false);
-            setDeleteProgressUI(100, 'Finalizing...');
-            renderBins();
-
-            document.getElementById('delete-progress-modal').classList.add('hidden');
-            isDeletingBin = false;
-            isProcessing = false;
-            renderBins();
-        }
-
         function fileText(idx) {
             const t = notepad.value.substring(notepad.selectionStart, notepad.selectionEnd).trim();
-            if (t) {
-                pushBinHistory(idx); appState.topics[idx].snippets.push(t);
-                notepad.value = notepad.value.substring(0, notepad.selectionStart) + notepad.value.substring(notepad.selectionEnd);
-                save(false); renderBins();
+            if (t) { 
+                pushBinHistory(idx); appState.topics[idx].snippets.push(t); 
+                notepad.value = notepad.value.substring(0, notepad.selectionStart) + notepad.value.substring(notepad.selectionEnd); 
+                save(false); renderBins(); 
             }
         }
 
@@ -625,7 +527,7 @@
                     save(false); renderBins(); animateBrain('import');
                 }
             };
-            r.readAsText(f);
+            reader.readAsText(f);
         }
 
         function exportData() {
@@ -644,27 +546,28 @@
 
         function toggleMenu(i, e) { e.stopPropagation(); activeMenuIndex = (activeMenuIndex === i) ? null : i; renderBins(); }
         function closeAllMenus() { if (activeMenuIndex !== null) { activeMenuIndex = null; renderBins(); } }
-
-        function openSettings() {
-            document.getElementById('api-key-input').value = appState.settings.userApiKey;
-            document.getElementById('model-select').value = appState.settings.model || "gemini-2.5-flash";
-            document.getElementById('settings-modal').classList.remove('hidden');
+        
+        function openSettings() { 
+            document.getElementById('api-key-input').value = appState.settings.userApiKey; 
+            document.getElementById('model-select').value = appState.settings.model || "gemini-2.5-flash"; 
+            document.getElementById('settings-modal').classList.remove('hidden'); 
         }
         function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
-        function saveSettings() {
-            appState.settings.userApiKey = document.getElementById('api-key-input').value.trim();
-            appState.settings.model = document.getElementById('model-select').value;
+        function saveSettings() { 
+            appState.settings.userApiKey = document.getElementById('api-key-input').value.trim(); 
+            appState.settings.model = document.getElementById('model-select').value; 
             save(false); closeSettings(); updateAiUIStates();
         }
-
+        
         function openEditModal(ti, si) { currentEditingSnippet = { ti, si }; document.getElementById('modal-content-area').value = appState.topics[ti].snippets[si]; document.getElementById('modal').classList.remove('hidden'); }
         function saveSnippetChanges() { const { ti, si } = currentEditingSnippet; pushBinHistory(ti); appState.topics[ti].snippets[si] = document.getElementById('modal-content-area').value; save(false); renderBins(); closeModal(); }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
         function promptDeleteTopic(i) { pendingDeleteIndex = i; document.getElementById('delete-modal-text').innerText = `Delete bin "${appState.topics[i].name}"? Content returns to scratchpad.`; document.getElementById('delete-bin-modal').classList.remove('hidden'); }
         function closeDeleteModal() { document.getElementById('delete-bin-modal').classList.add('hidden'); }
-        document.getElementById('confirm-delete-btn').onclick = async () => {
-            if (isDeletingBin) return;
-            await deleteTopicWithProgress(pendingDeleteIndex);
+        document.getElementById('confirm-delete-btn').onclick = () => {
+            const t = appState.topics[pendingDeleteIndex];
+            notepad.value = t.snippets.join("\n\n") + (notepad.value.trim() ? "\n\n" + notepad.value : "");
+            appState.topics.splice(pendingDeleteIndex, 1); save(false); renderBins(); closeDeleteModal();
         };
         function addNewTopic() { const n = prompt("Gate Name:"); if (n?.trim()) { appState.topics.push({ id: Date.now() + Math.random(), name: n.trim(), snippets: [], history: [] }); save(false); renderBins(); } }
         function renameTopic(i) { const n = prompt("Rename:", appState.topics[i].name); if (n?.trim()) { appState.topics[i].name = n.trim(); save(false); renderBins(); } }
