@@ -377,15 +377,31 @@
         function pushBinHistory(index) {
             const t = appState.topics[index];
             if (!t.history) t.history = [];
-            t.history.push([...t.snippets]);
+            t.history.push({
+                snippets: [...t.snippets],
+                notepadContent: notepad.value
+            });
             if (t.history.length > 20) t.history.shift();
+        }
+
+        function normalizeBinHistoryEntry(entry) {
+            if (Array.isArray(entry)) {
+                // Backward compatibility with older localStorage entries.
+                return { snippets: entry, notepadContent: notepad.value };
+            }
+            return {
+                snippets: Array.isArray(entry?.snippets) ? entry.snippets : [],
+                notepadContent: typeof entry?.notepadContent === 'string' ? entry.notepadContent : notepad.value
+            };
         }
 
         function undoBinAction(index, e) {
             e.stopPropagation();
             const t = appState.topics[index];
             if (t.history?.length > 0) { 
-                t.snippets = t.history.pop(); 
+                const previousState = normalizeBinHistoryEntry(t.history.pop());
+                t.snippets = previousState.snippets;
+                notepad.value = previousState.notepadContent;
                 save(false); 
                 renderBins(); 
             }
