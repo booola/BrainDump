@@ -7,7 +7,7 @@ As someone with **ADHD**, I’ve spent way too much time getting lost in the oce
 Instead of continuing the search for a tool that didn't quite exist, I decided to just ask **Gemini** to build exactly what I needed. **Brain Dump** is the result: a zero-friction, Windows 98-inspired environment designed to help me move from mental clutter to organized logic without the usual executive function burnout.
 
 ## 🛠️ **How to use it**
-
+[Click here to view the live preview](https://booola.github.io/BrainDump/BrainDump.html)
 ### **1. Just Open It**
 **Brain Dump** is a single-file web application. You don't need to install anything or set up a database. This is built specifically for personal use on a laptop—just download `BrainDump.html`, save it to your local drive, and open it in your browser. It's completely self-contained.
 
