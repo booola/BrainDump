@@ -374,12 +374,13 @@
             updateUndoState();
         }
 
-        function pushBinHistory(index) {
+        function pushBinHistory(index, action = 'update', movedText = '') {
             const t = appState.topics[index];
             if (!t.history) t.history = [];
             t.history.push({
                 snippets: [...t.snippets],
-                notepadContent: notepad.value
+                action,
+                movedText
             });
             if (t.history.length > 20) t.history.shift();
         }
@@ -387,12 +388,20 @@
         function normalizeBinHistoryEntry(entry) {
             if (Array.isArray(entry)) {
                 // Backward compatibility with older localStorage entries.
-                return { snippets: entry, notepadContent: notepad.value };
+                return { snippets: entry, action: 'update', movedText: '' };
             }
             return {
                 snippets: Array.isArray(entry?.snippets) ? entry.snippets : [],
-                notepadContent: typeof entry?.notepadContent === 'string' ? entry.notepadContent : notepad.value
+                action: entry?.action || 'update',
+                movedText: typeof entry?.movedText === 'string' ? entry.movedText : ''
             };
+        }
+
+        function appendToNotepad(text) {
+            if (!text?.trim()) return;
+            notepad.value = notepad.value.trimEnd()
+                ? `${notepad.value.trimEnd()}\n\n${text}`
+                : text;
         }
 
         function undoBinAction(index, e) {
@@ -401,7 +410,7 @@
             if (t.history?.length > 0) { 
                 const previousState = normalizeBinHistoryEntry(t.history.pop());
                 t.snippets = previousState.snippets;
-                notepad.value = previousState.notepadContent;
+                if (previousState.action === 'file') appendToNotepad(previousState.movedText);
                 save(false); 
                 renderBins(); 
             }
@@ -445,7 +454,7 @@
                             appState.topics.push({ id: Date.now() + Math.random(), name: item.category, snippets: [], history: [] });
                             idx = appState.topics.length - 1;
                         }
-                        pushBinHistory(idx);
+                        pushBinHistory(idx, 'file', item.line);
                         appState.topics[idx].snippets.push(item.line);
                     });
                     notepad.value = ""; save(false);
@@ -494,7 +503,7 @@
         function fileText(idx) {
             const t = notepad.value.substring(notepad.selectionStart, notepad.selectionEnd).trim();
             if (t) { 
-                pushBinHistory(idx); appState.topics[idx].snippets.push(t); 
+                pushBinHistory(idx, 'file', t); appState.topics[idx].snippets.push(t); 
                 notepad.value = notepad.value.substring(0, notepad.selectionStart) + notepad.value.substring(notepad.selectionEnd); 
                 save(false); renderBins(); 
             }
@@ -573,7 +582,7 @@
         function renameTopic(i) { const n = prompt("Rename:", appState.topics[i].name); if (n?.trim()) { appState.topics[i].name = n.trim(); save(false); renderBins(); } }
         function handleSearch() { renderBins(); }
         function undoNotepad() { if (appState.history.length) { notepad.value = appState.history.pop(); save(false); renderBins(); } }
-        function deleteSnippet(ti, si, e) { e.stopPropagation(); pushBinHistory(ti); const text = appState.topics[ti].snippets[si]; notepad.value = text + "\n" + notepad.value; appState.topics[ti].snippets.splice(si, 1); save(false); renderBins(); }
+        function deleteSnippet(ti, si, e) { e.stopPropagation(); pushBinHistory(ti, 'delete'); const text = appState.topics[ti].snippets[si]; notepad.value = text + "\n" + notepad.value; appState.topics[ti].snippets.splice(si, 1); save(false); renderBins(); }
 
         init();
     </script>
